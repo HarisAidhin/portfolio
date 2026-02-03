@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Write-up Security | Haris Aidhin Ramadhan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header & Navigation -->
+    <header id="header">
+        <div class="container">
+            <div class="nav-container">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>HA<span class="logo-accent">R</span></span>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="index.html#about" class="nav-link">Tentang</a></li>
+                    <li class="nav-item"><a href="index.html#writeup" class="nav-link active">Write-up</a></li>
+                    <li class="nav-item"><a href="index.html#contact" class="nav-link">Kontak</a></li>
+                </ul>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Write-up Hero -->
+    <section class="writeup-hero">
+        <div class="container">
+            <div class="writeup-hero-content">
+                <h1>Security Write-up</h1>
+                <p>Dokumentasi temuan kerentanan keamanan dan analisis teknis</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Write-up Content -->
+    <section class="writeup-section">
+        <div class="container">
+            <div class="writeup-container">
+                <!-- Write-up 1 -->
+                <article class="writeup-article">
+                    <div class="writeup-header">
+                        <div class="writeup-meta">
+                            <span class="writeup-date"><i class="far fa-calendar"></i> 2024</span>
+                            <span class="writeup-severity severity-high"><i class="fas fa-exclamation-triangle"></i> High Severity</span>
+                            <span class="writeup-type"><i class="fas fa-folder"></i> Information Disclosure</span>
+                        </div>
+                        <h2>Penemuan .env File Exposure di Universitas Dirgantara Marsekal Suryadarma</h2>
+                    </div>
+                    
+                    <div class="writeup-content">
+                        <div class="writeup-summary">
+                            <h3><i class="fas fa-clipboard-check"></i> Ringkasan</h3>
+                            <p>Penemuan file <code>.env</code> yang dapat diakses publik berisi konfigurasi database sensitif di website universitas.</p>
+                        </div>
+                        
+                        <div class="writeup-details">
+                            <h3><i class="fas fa-search"></i> Temuan</h3>
+                            <p>Saya menemukan sebuah direktori <code>.env</code> yang dapat diakses publik pada website kampus. File ini berisi konfigurasi database yang sangat sensitif:</p>
+                            
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>.env file content</span>
+                                    <button class="copy-code"><i class="far fa-copy"></i></button>
+                                </div>
+                                <pre><code># Database Configuration
+DB_HOSTNAME=[sensitive]
+DB_USERNAME=[sensitive]
+DB_PASSWORD=[sensitive]
+DB_NAME=[sensitive]</code></pre>
+                            </div>
+                            
+                            <p>Dengan kredensial tersebut, saya berhasil melakukan koneksi ke database menggunakan DBeaver dan mengonfirmasi akses penuh ke sistem database.</p>
+                            
+                            <div class="writeup-image">
+                                <img src="Imagewriteup/Ss_writeup_unsurya(env).jpg" alt="Bukti koneksi database berhasil">
+                                <p class="image-caption">Bukti berhasil terkoneksi ke database menggunakan kredensial yang ditemukan</p>
+                            </div>
+                        </div>
+                        
+                        <div class="writeup-impact">
+                            <h3><i class="fas fa-exclamation-circle"></i> Dampak</h3>
+                            <ul>
+                                <li><strong>Full Database Access:</strong> Akses penuh ke seluruh data mahasiswa, dosen, dan sistem akademik</li>
+                                <li><strong>Data Breach Potential:</strong> Data sensitif seperti informasi pribadi, nilai, dan administrasi terancam</li>
+                                <li><strong>Privilege Escalation:</strong> Potensi untuk mendapatkan akses lebih tinggi ke sistem</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="writeup-resolution">
+                            <h3><i class="fas fa-check-circle"></i> Resolusi</h3>
+                            <p>Laporan segera dikirimkan ke tim IT universitas melalui saluran yang tepat. Dalam waktu singkat, file <code>.env</code> telah diamankan dan tidak lagi dapat diakses publik.</p>
+                        </div>
+                    </div>
+                </article>
+                
+                <!-- Write-up 2 -->
+                <article class="writeup-article">
+                    <div class="writeup-header">
+                        <div class="writeup-meta">
+                            <span class="writeup-date"><i class="far fa-calendar"></i> 2024</span>
+                            <span class="writeup-severity severity-medium"><i class="fas fa-exclamation-circle"></i> Medium Severity</span>
+                            <span class="writeup-type"><i class="fas fa-folder"></i> IDOR Vulnerability</span>
+                        </div>
+                        <h2>Identifikasi IDOR (Insecure Direct Object Reference) di Sistem Akademik Universitas</h2>
+                    </div>
+                    
+                    <div class="writeup-content">
+                        <div class="writeup-summary">
+                            <h3><i class="fas fa-clipboard-check"></i> Ringkasan</h3>
+                            <p>Temuan kerentanan IDOR yang memungkinkan akses tidak sah ke data mahasiswa dengan memanipulasi parameter NIM.</p>
+                        </div>
+                        
+                        <div class="writeup-details">
+                            <h3><i class="fas fa-search"></i> Temuan</h3>
+                            <p>Pada halaman aktivitas mahasiswa, sistem menerima parameter NIM tanpa validasi akses yang memadai. Dengan hanya memasukkan NIM, sistem menampilkan data lengkap mahasiswa:</p>
+                            
+                            <div class="writeup-image">
+                                <img src="Imagewriteup/Ss_writeupunsurya(idor).png" alt="Contoh IDOR vulnerability">
+                                <p class="image-caption">Sistem menampilkan data mahasiswa berdasarkan NIM yang dimasukkan</p>
+                            </div>
+                            
+                            <p>Saya mengembangkan script Python untuk melakukan automated testing dan mengumpulkan data dalam jumlah besar:</p>
+                            
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>Python automation script</span>
+                                    <button class="copy-code"><i class="far fa-copy"></i></button>
+                                </div>
+                                <pre><code>import requests
+
+def fetch_student_data(nim_list):
+    base_url = "https://university-system/student/"
+    results = []
+    
+    for nim in nim_list:
+        response = requests.get(f"{base_url}?nim={nim}")
+        if response.status_code == 200:
+            data = response.json()
+            results.append({
+                'nim': data['nim'],
+                'name': data['name'],
+                'email': data['email']
+            })
+    return results
+
+# Read NIMs from file
+with open('nim_list.txt', 'r') as f:
+    nim_list = f.read().splitlines()
+
+student_data = fetch_student_data(nim_list)</code></pre>
+                            </div>
+                            
+                            <div class="writeup-image">
+                                <img src="Imagewriteup/Ss_writeupunsurya(idor1).jpg" alt="Hasil automated testing">
+                                <p class="image-caption">Hasil mass data collection menggunakan script automation</p>
+                            </div>
+                        </div>
+                        
+                        <div class="writeup-impact">
+                            <h3><i class="fas fa-exclamation-circle"></i> Dampak</h3>
+                            <ul>
+                                <li><strong>Data Exposure:</strong> Informasi pribadi mahasiswa dapat diakses tanpa otorisasi</li>
+                                <li><strong>Mass Data Collection:</strong> Kemungkinan pengumpulan data dalam skala besar</li>
+                                <li><strong>Privacy Violation:</strong> Pelanggaran privasi data sensitif</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="writeup-resolution">
+                            <h3><i class="fas fa-check-circle"></i> Resolusi</h3>
+                            <p>Setelah melaporkan temuan ini, tim pengembang menambahkan validasi akses dan otorisasi yang tepat. Sistem sekarang memverifikasi hak akses pengguna sebelum menampilkan data mahasiswa.</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Haris Aidhin Ramadhan</span>
+                </div>
+                <p class="footer-tagline">Security Write-ups & Vulnerability Research</p>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="index.html#about">Tentang</a>
+                    <a href="index.html#skills">Keahlian</a>
+                    <a href="index.html#contact">Kontak</a>
+                </div>
+                <p class="footer-copyright">© 2024 Haris Aidhin Ramadhan. Write-up ini untuk tujuan edukasi keamanan siber.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
