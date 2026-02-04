@@ -137,14 +137,70 @@ const certificates = [
         title: 'Bpbd Kota Magelang',
         type: 'national',
         image: 'Sertifikat/serti24.jpg'
-    }
-    ,
+    },
     {
-        title: 'Detik.com ',
+        title: 'Detik.com',
         type: 'national',
         image: 'Sertifikat/serti25.jpg'
+    },
+    {
+        title: 'Sumedangkab CSIRT',
+        type: 'national',
+        image: 'Sertifikat/serti26.jpg'
     }
 ];
+
+// Image Modal Functionality
+function createImageModal() {
+    const modalHTML = `
+        <div class="image-modal">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="modal-body">
+                    <img src="" alt="Certificate Preview" class="modal-image">
+                </div>
+                <div class="modal-footer">
+                    <p class="modal-title"></p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    const modal = document.querySelector('.image-modal');
+    const modalImage = modal.querySelector('.modal-image');
+    const modalTitle = modal.querySelector('.modal-title');
+    const modalClose = modal.querySelector('.modal-close');
+    const modalOverlay = modal.querySelector('.modal-overlay');
+    
+    // Function to open modal
+    window.openImageModal = function(imageSrc, title) {
+        modalImage.src = imageSrc;
+        modalTitle.textContent = title;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+    
+    // Close modal functions
+    function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+    
+    modalClose.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', closeModal);
+    
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+}
 
 // Mobile Navigation
 hamburger.addEventListener('click', () => {
@@ -213,7 +269,12 @@ function loadCertificates(filter = 'all') {
         certElement.className = 'certificate-item fade-in';
         
         certElement.innerHTML = `
-            <img src="${cert.image}" alt="${cert.title}" class="certificate-image">
+            <div class="certificate-image-container">
+                <img src="${cert.image}" alt="${cert.title}" class="certificate-image">
+                <div class="image-overlay">
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
             <div class="certificate-content">
                 <h4 class="certificate-title">${cert.title}</h4>
                 <span class="certificate-type">${cert.type === 'national' ? 'Nasional' : 'Internasional'}</span>
@@ -225,6 +286,16 @@ function loadCertificates(filter = 'all') {
                 }
             </div>
         `;
+        
+        // Add click event for image modal
+        const imageContainer = certElement.querySelector('.certificate-image-container');
+        const image = certElement.querySelector('.certificate-image');
+        
+        imageContainer.addEventListener('click', (e) => {
+            if (!e.target.closest('.certificate-link')) {
+                openImageModal(image.src, cert.title);
+            }
+        });
         
         certificateGrid.appendChild(certElement);
     });
@@ -367,6 +438,9 @@ const observer = new IntersectionObserver((entries) => {
 
 // Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
+    // Create image modal
+    createImageModal();
+    
     // Load certificates
     loadCertificates();
     
