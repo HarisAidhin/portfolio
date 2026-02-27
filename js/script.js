@@ -150,7 +150,7 @@ const certificates = [
     }
     ,
     {
-        title: 'Sumedangkab CSIRT',
+        title: 'Jawa Tengah CSIRT',
         type: 'national',
         image: 'Sertifikat/serti27.jpg'
     }
