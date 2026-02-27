@@ -148,6 +148,12 @@ const certificates = [
         type: 'national',
         image: 'Sertifikat/serti26.jpg'
     }
+    ,
+    {
+        title: 'Sumedangkab CSIRT',
+        type: 'national',
+        image: 'Sertifikat/serti27.jpg'
+    }
 ];
 
 // Image Modal Functionality
